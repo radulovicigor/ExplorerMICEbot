@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAG Chatbot</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero {
+      text-align: center;
+      color: white;
+      padding: 40px;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    }
+
+    .hero p {
+      font-size: 1.15rem;
+      opacity: 0.9;
+      max-width: 500px;
+      margin: 0 auto 30px;
+      line-height: 1.6;
+    }
+
+    .steps {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .step {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 24px;
+      width: 200px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .step .num {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    .step h3 {
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .step p {
+      font-size: 13px;
+      opacity: 0.8;
+      line-height: 1.4;
+    }
+
+    .arrow {
+      font-size: 14px;
+      opacity: 0.6;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <h1>RAG Chatbot</h1>
+    <p>Uploaduj PDF dokument i postavljaj pitanja. Chatbot koristi RAG arhitekturu da pronađe odgovore iz tvog dokumenta.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <h3>Upload PDF</h3>
+        <p>Klikni na chat ikonicu i uploaduj PDF</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h3>Postavi pitanje</h3>
+        <p>Upiši pitanje o dokumentu</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h3>Dobij odgovor</h3>
+        <p>RAG pronalazi relevantne dijelove i generiše odgovor</p>
+      </div>
+    </div>
+
+    <p class="arrow" style="margin-top: 40px;">Klikni na ljubičastu ikonicu u donjem desnom uglu</p>
+  </div>
+
+  <script src="/static/widget.js"></script>
+</body>
+</html>
