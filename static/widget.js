@@ -214,6 +214,58 @@
     #rag-chat-send:disabled { opacity: 0.35; cursor: not-allowed; }
     #rag-chat-send svg { width: 18px; height: 18px; fill: #C6A75E; }
 
+    #rag-greeting {
+      position: fixed;
+      bottom: 96px;
+      right: 28px;
+      background: #0E3B2E;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 14px 14px 4px 14px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 13.5px;
+      line-height: 1.45;
+      max-width: 260px;
+      box-shadow: 0 6px 24px rgba(14, 59, 46, 0.3);
+      z-index: 99997;
+      cursor: pointer;
+      animation: rag-greeting-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    #rag-greeting span {
+      color: #C6A75E;
+      font-weight: 600;
+    }
+    #rag-greeting-close {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 22px;
+      height: 22px;
+      background: #fff;
+      border: 1.5px solid #ddd;
+      border-radius: 50%;
+      font-size: 12px;
+      line-height: 18px;
+      text-align: center;
+      color: #888;
+      cursor: pointer;
+    }
+    #rag-greeting-close:hover { background: #f0f0f0; }
+    @keyframes rag-greeting-in {
+      from { opacity: 0; transform: translateY(10px) scale(0.9); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes rag-pulse {
+      0%, 100% { box-shadow: 0 4px 16px rgba(14, 59, 46, 0.35); }
+      50% { box-shadow: 0 4px 24px rgba(198, 167, 94, 0.5); }
+    }
+    #rag-chat-toggle.pulse {
+      animation: rag-pulse 2s ease-in-out infinite;
+    }
+
+    @media (max-width: 768px) {
+      #rag-greeting { display: none !important; }
+    }
     @media (max-width: 480px) {
       #rag-chat-window {
         width: calc(100vw - 16px);
@@ -268,6 +320,45 @@
     document.body.appendChild(btn);
     document.body.appendChild(win);
     bindEvents(btn, win);
+    showGreeting(btn, win);
+  }
+
+  function showGreeting(btn, win) {
+    if (window.innerWidth < 768) return;
+
+    setTimeout(() => {
+      if (win.classList.contains("visible")) return;
+
+      btn.classList.add("pulse");
+
+      const bubble = document.createElement("div");
+      bubble.id = "rag-greeting";
+      bubble.innerHTML = `
+        Hi! <span>Explorer MICE</span> here. Ask me anything about our event services in Montenegro.
+        <div id="rag-greeting-close">&times;</div>
+      `;
+      document.body.appendChild(bubble);
+
+      bubble.addEventListener("click", (e) => {
+        if (e.target.id === "rag-greeting-close") {
+          bubble.remove();
+          btn.classList.remove("pulse");
+          return;
+        }
+        bubble.remove();
+        btn.classList.remove("pulse");
+        win.classList.add("visible");
+        btn.classList.add("open");
+        document.getElementById("rag-chat-input").focus();
+      });
+
+      setTimeout(() => {
+        if (bubble.parentNode && !win.classList.contains("visible")) {
+          bubble.remove();
+          btn.classList.remove("pulse");
+        }
+      }, 15000);
+    }, 3000);
   }
 
   function bindEvents(btn, win) {
@@ -279,6 +370,9 @@
     btn.addEventListener("click", () => {
       const open = win.classList.toggle("visible");
       btn.classList.toggle("open", open);
+      btn.classList.remove("pulse");
+      const g = document.getElementById("rag-greeting");
+      if (g) g.remove();
       if (open) input.focus();
     });
 
