@@ -2,17 +2,28 @@
 Explorer DMC Knowledge Base Ingestion Pipeline
 
 Parses the canonical markdown knowledge base (explorer_dmc_rag_kb.md),
-extracts YAML metadata blocks, chunks by section boundaries, and outputs
-structured JSONL ready for embedding and vector retrieval.
+extracts YAML metadata blocks, chunks by section boundaries, generates
+embeddings via OpenAI, and outputs:
+  - data/chunks.jsonl   (structured chunks with metadata)
+  - data/embeddings.npy (precomputed embedding vectors)
 """
 
 import re
 import json
 import os
 import math
+import numpy as np
+from dotenv import load_dotenv
+from openai import OpenAI
 
-SOURCE_FILE = os.path.join(os.path.dirname(__file__), "data", "explorer_dmc_rag_kb.md")
-OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "data", "chunks.jsonl")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
+
+SOURCE_FILE = os.path.join(BASE_DIR, "data", "explorer_dmc_rag_kb.md")
+OUTPUT_FILE = os.path.join(BASE_DIR, "data", "chunks.jsonl")
+EMBEDDINGS_FILE = os.path.join(BASE_DIR, "data", "embeddings.npy")
+
+EMBED_MODEL = "text-embedding-3-small"
 
 TARGET_CHUNK_TOKENS = 500
 MAX_CHUNK_TOKENS = 650
@@ -136,6 +147,29 @@ def write_jsonl(chunks, output_path):
             f.write(json.dumps(chunk, ensure_ascii=False) + "\n")
 
 
+def generate_embeddings(chunks):
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        print("ERROR: OPENAI_API_KEY not set. Skipping embedding generation.")
+        return None
+
+    client = OpenAI(api_key=api_key)
+    texts = [c["chunk_text"] for c in chunks]
+
+    all_embeds = []
+    batch_size = 100
+    total_batches = (len(texts) + batch_size - 1) // batch_size
+
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i:i + batch_size]
+        batch_num = i // batch_size + 1
+        print(f"  Embedding batch {batch_num}/{total_batches}...")
+        response = client.embeddings.create(model=EMBED_MODEL, input=batch)
+        all_embeds.extend([item.embedding for item in response.data])
+
+    return np.array(all_embeds).astype("float32")
+
+
 def main():
     print(f"Reading: {SOURCE_FILE}")
     sections = parse_knowledge_base(SOURCE_FILE)
@@ -154,12 +188,15 @@ def main():
     print(f"Categories: {json.dumps(categories, indent=2)}")
 
     write_jsonl(chunks, OUTPUT_FILE)
-    print(f"Written to: {OUTPUT_FILE}")
+    print(f"Chunks written to: {OUTPUT_FILE}")
 
-    print(f"\nSample chunk:")
-    sample = chunks[0].copy()
-    sample["chunk_text"] = sample["chunk_text"][:200] + "..."
-    print(json.dumps(sample, indent=2, ensure_ascii=False))
+    print("Generating embeddings...")
+    embeddings = generate_embeddings(chunks)
+    if embeddings is not None:
+        np.save(EMBEDDINGS_FILE, embeddings)
+        print(f"Embeddings written to: {EMBEDDINGS_FILE} (shape: {embeddings.shape})")
+    else:
+        print("WARNING: No embeddings generated. App will generate them at startup.")
 
 
 if __name__ == "__main__":

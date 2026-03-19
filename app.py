@@ -85,10 +85,11 @@ def get_embeddings(texts):
 
 
 def load_chunks():
-    """Load structured chunks from JSONL. Falls back to ingesting from MD if JSONL missing."""
+    """Load chunks from JSONL and precomputed embeddings from .npy."""
     global chunks_db, embeddings_matrix
 
     jsonl_path = os.path.join(BASE_DIR, "data", "chunks.jsonl")
+    npy_path = os.path.join(BASE_DIR, "data", "embeddings.npy")
 
     if not os.path.exists(jsonl_path):
         print("chunks.jsonl not found, running ingestion...")
@@ -108,19 +109,25 @@ def load_chunks():
 
     print(f"Loaded {len(chunks_db)} chunks from knowledge base")
 
-    texts = [c["chunk_text"] for c in chunks_db]
-    print("Generating embeddings...")
+    if os.path.exists(npy_path):
+        embeddings_matrix = np.load(npy_path)
+        if len(embeddings_matrix) == len(chunks_db):
+            print(f"Loaded precomputed embeddings ({embeddings_matrix.shape})")
+            return
+        print("WARNING: Embedding count mismatch, regenerating...")
 
+    print("Precomputed embeddings not found, generating...")
+    texts = [c["chunk_text"] for c in chunks_db]
     all_embeds = []
     batch_size = 100
     for i in range(0, len(texts), batch_size):
         batch = texts[i:i + batch_size]
-        print(f"  Embedding batch {i // batch_size + 1}/{(len(texts) + batch_size - 1) // batch_size}")
         embeds = get_embeddings(batch)
         all_embeds.extend(embeds)
 
     embeddings_matrix = np.array(all_embeds).astype("float32")
-    print(f"Ready! {len(chunks_db)} chunks embedded.")
+    np.save(npy_path, embeddings_matrix)
+    print(f"Generated and saved embeddings ({embeddings_matrix.shape})")
 
 
 def search_chunks(query, top_k=10, filters=None):
